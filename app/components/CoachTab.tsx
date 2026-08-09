@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { ShieldAlert, Lock } from "lucide-react";
+import { ShieldAlert, Lock, CheckCircle } from "lucide-react";
 import { Task } from "../types";
 
 interface Props {
@@ -12,7 +13,14 @@ interface Props {
 }
 
 export default function CoachTab({ tasks, coachPin, setCoachPin, onApprove }: Props) {
+  const [approvedId, setApprovedId] = useState<string | null>(null);
   const pending = tasks.filter(t => t.status === "VAR Check");
+
+  const handleApprove = (id: string) => {
+    onApprove(id);
+    setApprovedId(id);
+    setTimeout(() => setApprovedId(null), 2500);
+  };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-2xl mx-auto mt-12">
@@ -55,10 +63,14 @@ export default function CoachTab({ tasks, coachPin, setCoachPin, onApprove }: Pr
                   </a>
                 </div>
                 <button
-                  onClick={() => onApprove(task.id)}
-                  className="bg-[#00E676] hover:bg-green-500 text-black font-bold px-4 py-2 rounded shadow-[0_0_10px_rgba(0,230,118,0.3)] transition-all"
+                  onClick={() => handleApprove(task.id)}
+                  className="bg-[#00E676] hover:bg-green-500 text-black font-bold px-4 py-2 rounded shadow-[0_0_10px_rgba(0,230,118,0.3)] transition-all flex items-center gap-2"
                 >
-                  Setujui Gol! <span className="font-normal text-xs block">(Approve Goal)</span>
+                  {approvedId === task.id ? (
+                    <><CheckCircle size={16} /> Gol! ✅</>
+                  ) : (
+                    <>Setujui Gol! <span className="font-normal text-xs block">(Approve Goal)</span></>
+                  )}
                 </button>
               </div>
             ))

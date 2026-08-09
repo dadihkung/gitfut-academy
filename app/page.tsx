@@ -152,6 +152,7 @@ export default function GitFutAcademy() {
         githubLink={githubLink}
         onEditGithub={() => {}}
         onSwitchUser={handleSwitchUser}
+        who={who}
       />
 
       <main className="max-w-6xl mx-auto px-6 py-12">

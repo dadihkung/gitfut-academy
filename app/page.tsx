@@ -156,7 +156,7 @@ export default function GitFutAcademy() {
       />
 
       <main className="max-w-6xl mx-auto px-6 py-12">
-        {activeTab === "profile" && <ProfileTab stats={stats} />}
+        {activeTab === "profile" && <ProfileTab stats={stats} tasks={tasks} />}
         {activeTab === "roadmap" && <RoadmapTab tasks={tasks} ovr={stats.ovr} onSelectTask={setSelectedTask} />}
         {activeTab === "coach" && (
           <CoachTab tasks={tasks} coachPin={coachPin} setCoachPin={setCoachPin} onApprove={handleCoachApprove} />

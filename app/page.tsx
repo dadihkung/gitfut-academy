@@ -122,18 +122,24 @@ export default function GitFutAcademy() {
 
   const handleTaskSubmit = async () => {
     if (!selectedTask) return;
-    await supabase.from("tasks")
+    const { error } = await supabase.from("tasks")
       .update({ status: "VAR Check", demo_url: demoInput })
       .eq("id", selectedTask.id);
+    if (error) return alert("Error: " + error.message);
+    // Update local state immediately
+    setTasks(prev => prev.map(t => t.id === selectedTask.id ? { ...t, status: "VAR Check", demoUrl: demoInput } : t));
     setSelectedTask(null);
     setDemoInput("");
   };
 
   const handleCoachApprove = async (id: string) => {
     if (coachPin !== "153023") return alert("VAR Overruled: Incorrect Coach PIN");
-    await supabase.from("tasks")
+    const { error } = await supabase.from("tasks")
       .update({ status: "Goal Scored!" })
       .eq("id", id);
+    if (error) return alert("Error: " + error.message);
+    // Update local state immediately without waiting for realtime
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, status: "Goal Scored!" } : t));
   };
 
   return (

@@ -32,6 +32,14 @@ export default function GitFutAcademy() {
 
     const savedLink = localStorage.getItem(GITHUB_STORAGE_KEY);
     if (savedLink) setGithubLink(savedLink);
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "gitfut_tasks" && e.newValue) {
+        setTasks(JSON.parse(e.newValue));
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   useEffect(() => {

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { INITIAL_TASKS } from "./data/tasks";
 import { Task, UserRole, Category, Who, GITHUB_STORAGE_KEY, USER_ROLE_STORAGE_KEY, WHO_STORAGE_KEY } from "./types";
+import { supabase } from "../lib/supabase";
 import RoleSelector from "./components/RoleSelector";
 import Header from "./components/Header";
 import ProfileTab from "./components/ProfileTab";
@@ -20,31 +21,67 @@ export default function GitFutAcademy() {
   const [githubLink, setGithubLink] = useState<string | null>(null);
   const [who, setWho] = useState<Who | null>(null);
 
+  // Load tasks from Supabase, seed if empty
   useEffect(() => {
-    const saved = localStorage.getItem("gitfut_tasks");
-    if (saved) setTasks(JSON.parse(saved));
+    const init = async () => {
+      const { data } = await supabase.from("tasks").select("*");
 
+      if (data && data.length > 0) {
+        setTasks(data.map(row => ({
+          id: row.id,
+          week: row.week,
+          title: row.title,
+          desc: row.description,
+          category: row.category,
+          status: row.status,
+          demoUrl: row.demo_url,
+          guide: row.guide,
+        })));
+      } else {
+        // First time — seed the table with initial tasks
+        await supabase.from("tasks").insert(
+          INITIAL_TASKS.map(t => ({
+            id: t.id,
+            week: t.week,
+            title: t.title,
+            description: t.desc,
+            category: t.category,
+            status: t.status,
+            demo_url: t.demoUrl ?? null,
+            guide: t.guide,
+          }))
+        );
+      }
+    };
+
+    init();
+
+    // Real-time subscription
+    const channel = supabase
+      .channel("tasks-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "tasks" }, (payload) => {
+        if (payload.eventType === "UPDATE") {
+          const row = payload.new;
+          setTasks(prev => prev.map(t =>
+            t.id === row.id ? { ...t, status: row.status, demoUrl: row.demo_url } : t
+          ));
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  // Load who + github from localStorage
+  useEffect(() => {
     const savedWho = localStorage.getItem(WHO_STORAGE_KEY) as Who | null;
     if (savedWho === "me" || savedWho === "brother") {
       setWho(savedWho);
       applyWho(savedWho);
     }
-
     const savedLink = localStorage.getItem(GITHUB_STORAGE_KEY);
     if (savedLink) setGithubLink(savedLink);
-
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "gitfut_tasks" && e.newValue) {
-        setTasks(JSON.parse(e.newValue));
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem("gitfut_tasks", JSON.stringify(tasks));
-  }, [tasks]);
 
   function applyWho(w: Who) {
     const role: UserRole = w === "me" ? "coach" : "player";
@@ -63,6 +100,12 @@ export default function GitFutAcademy() {
     applyWho(w);
   };
 
+  const handleSwitchUser = () => {
+    localStorage.removeItem(WHO_STORAGE_KEY);
+    setWho(null);
+    setUserRole(null);
+  };
+
   const stats = useMemo(() => {
     const baseStats = { LOG: 50, PYT: 50, HTM: 50, CSS: 50, JS: 50, GIT: 50 };
     let approvedCount = 0;
@@ -77,22 +120,20 @@ export default function GitFutAcademy() {
     return { ...baseStats, ovr, approvedCount, total: tasks.length };
   }, [tasks]);
 
-  const handleSwitchUser = () => {
-    localStorage.removeItem(WHO_STORAGE_KEY);
-    setWho(null);
-    setUserRole(null);
-  };
-
-  const handleTaskSubmit = () => {
+  const handleTaskSubmit = async () => {
     if (!selectedTask) return;
-    setTasks(tasks.map(t => t.id === selectedTask.id ? { ...t, status: "VAR Check", demoUrl: demoInput } : t));
+    await supabase.from("tasks")
+      .update({ status: "VAR Check", demo_url: demoInput })
+      .eq("id", selectedTask.id);
     setSelectedTask(null);
     setDemoInput("");
   };
 
-  const handleCoachApprove = (id: string) => {
+  const handleCoachApprove = async (id: string) => {
     if (coachPin !== "153023") return alert("VAR Overruled: Incorrect Coach PIN");
-    setTasks(tasks.map(t => t.id === id ? { ...t, status: "Goal Scored!" } : t));
+    await supabase.from("tasks")
+      .update({ status: "Goal Scored!" })
+      .eq("id", id);
   };
 
   return (

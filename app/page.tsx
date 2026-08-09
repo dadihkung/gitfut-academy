@@ -69,7 +69,11 @@ export default function GitFutAcademy() {
     return { ...baseStats, ovr, approvedCount, total: tasks.length };
   }, [tasks]);
 
-  const handleTaskSubmit = () => {
+  const handleSwitchUser = () => {
+    localStorage.removeItem(WHO_STORAGE_KEY);
+    setWho(null);
+    setUserRole(null);
+  };
     if (!selectedTask) return;
     setTasks(tasks.map(t => t.id === selectedTask.id ? { ...t, status: "VAR Check", demoUrl: demoInput } : t));
     setSelectedTask(null);
@@ -77,7 +81,7 @@ export default function GitFutAcademy() {
   };
 
   const handleCoachApprove = (id: string) => {
-    if (coachPin !== "1234") return alert("VAR Overruled: Incorrect Coach PIN");
+    if (coachPin !== "153023") return alert("VAR Overruled: Incorrect Coach PIN");
     setTasks(tasks.map(t => t.id === id ? { ...t, status: "Goal Scored!" } : t));
   };
 
@@ -90,6 +94,7 @@ export default function GitFutAcademy() {
         setActiveTab={setActiveTab}
         githubLink={githubLink}
         onEditGithub={() => {}}
+        onSwitchUser={handleSwitchUser}
       />
 
       <main className="max-w-6xl mx-auto px-6 py-12">

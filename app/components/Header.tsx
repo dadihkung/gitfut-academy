@@ -7,6 +7,7 @@ interface Props {
   setActiveTab: (tab: "profile" | "roadmap" | "coach") => void;
   githubLink: string | null;
   onEditGithub: () => void;
+  onSwitchUser: () => void;
 }
 
 const TAB_LABELS: Record<string, string> = {
@@ -15,7 +16,7 @@ const TAB_LABELS: Record<string, string> = {
   coach: "Pelatih",
 };
 
-export default function Header({ activeTab, setActiveTab, githubLink, onEditGithub }: Props) {
+export default function Header({ activeTab, setActiveTab, githubLink, onEditGithub, onSwitchUser }: Props) {
   return (
     <header className="border-b border-white/10 bg-[#1C2541]/80 backdrop-blur-md sticky top-0 z-10">
       <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -36,6 +37,12 @@ export default function Header({ activeTab, setActiveTab, githubLink, onEditGith
               {githubLink.replace("https://github.com/", "@")}
             </button>
           )}
+          <button
+            onClick={onSwitchUser}
+            className="text-xs text-slate-500 hover:text-white bg-black/30 px-3 py-2 rounded-lg border border-white/10 transition-colors"
+          >
+            Ganti Pengguna
+          </button>
           <nav className="flex gap-2 bg-black/30 p-1 rounded-lg border border-white/10">
             {(["profile", "roadmap", "coach"] as const).map((tab) => (
               <button

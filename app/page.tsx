@@ -74,6 +74,8 @@ export default function GitFutAcademy() {
     setWho(null);
     setUserRole(null);
   };
+
+  const handleTaskSubmit = () => {
     if (!selectedTask) return;
     setTasks(tasks.map(t => t.id === selectedTask.id ? { ...t, status: "VAR Check", demoUrl: demoInput } : t));
     setSelectedTask(null);

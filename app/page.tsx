@@ -169,6 +169,7 @@ export default function GitFutAcademy() {
         setDemoInput={setDemoInput}
         onSubmit={handleTaskSubmit}
         onClose={() => setSelectedTask(null)}
+        githubLink={githubLink}
       />
     </div>
   );

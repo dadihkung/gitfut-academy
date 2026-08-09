@@ -10,6 +10,7 @@ interface Props {
   setDemoInput: (v: string) => void;
   onSubmit: () => void;
   onClose: () => void;
+  githubLink: string | null;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -19,7 +20,10 @@ const STATUS_LABELS: Record<string, string> = {
   "Goal Scored!": "Gol! ✅ (Goal Scored!)",
 };
 
-export default function TaskModal({ task, demoInput, setDemoInput, onSubmit, onClose }: Props) {
+export default function TaskModal({ task, demoInput, setDemoInput, onSubmit, onClose, githubLink }: Props) {
+  const urlError = demoInput && githubLink && !demoInput.startsWith(githubLink)
+    ? `Link harus dari akun GitHub kamu (${githubLink}). (Link must be from your GitHub account.)`
+    : "";
   return (
     <AnimatePresence>
       {task && (
@@ -87,13 +91,14 @@ export default function TaskModal({ task, demoInput, setDemoInput, onSubmit, onC
                   <input
                     type="url"
                     placeholder="https://github.com/... atau link Replit"
-                    className="w-full bg-black/50 border border-white/10 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-[#00E676]"
+                    className={`w-full bg-black/50 border rounded-lg py-3 px-4 text-white focus:outline-none ${urlError ? "border-red-500 focus:border-red-500" : "border-white/10 focus:border-[#00E676]"}`}
                     value={demoInput}
                     onChange={(e) => setDemoInput(e.target.value)}
                   />
+                  {urlError && <p className="text-xs text-red-400">{urlError}</p>}
                   <button
                     onClick={onSubmit}
-                    disabled={!demoInput}
+                    disabled={!demoInput || !!urlError}
                     className="w-full bg-[#00E676] disabled:bg-slate-700 disabled:text-slate-500 text-black font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
                   >
                     <Play size={18} fill="currentColor" /> Kirim untuk Dicek Pelatih <span className="font-normal text-xs ml-1 italic">(Submit for VAR Review)</span>

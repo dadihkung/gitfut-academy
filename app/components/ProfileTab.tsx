@@ -73,7 +73,7 @@ export default function ProfileTab({ stats, tasks }: Props) {
 
             <div className="absolute inset-0 z-10 font-sans">
               <div className="absolute left-1/2 -translate-x-1/2 top-[9%] z-[15] h-[210px] w-[200px] overflow-visible pointer-events-none">
-                <Image src="/fatih-pic3.png" alt="Fatih portrait" width={480} height={600}
+                <Image src="/fatih-pic.png" alt="Fatih portrait" width={480} height={600}
                   sizes="200px" className="h-full w-full object-contain object-bottom scale-[1.1]" priority />
                 <div className="absolute pointer-events-none" style={{
                   left: "-15px", right: "-15px", bottom: "-14px",

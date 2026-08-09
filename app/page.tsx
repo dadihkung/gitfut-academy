@@ -1,69 +1,112 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useEffect, useMemo } from "react";
+import { INITIAL_TASKS } from "./data/tasks";
+import { Task, UserRole, Category, Who, GITHUB_STORAGE_KEY, USER_ROLE_STORAGE_KEY, WHO_STORAGE_KEY } from "./types";
+import RoleSelector from "./components/RoleSelector";
+import Header from "./components/Header";
+import ProfileTab from "./components/ProfileTab";
+import RoadmapTab from "./components/RoadmapTab";
+import CoachTab from "./components/CoachTab";
+import TaskModal from "./components/TaskModal";
+
+export default function GitFutAcademy() {
+  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+  const [activeTab, setActiveTab] = useState<"profile" | "roadmap" | "coach">("roadmap");
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [demoInput, setDemoInput] = useState("");
+  const [coachPin, setCoachPin] = useState("");
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [githubLink, setGithubLink] = useState<string | null>(null);
+  const [who, setWho] = useState<Who | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("gitfut_tasks");
+    if (saved) setTasks(JSON.parse(saved));
+
+    const savedWho = localStorage.getItem(WHO_STORAGE_KEY) as Who | null;
+    if (savedWho === "me" || savedWho === "brother") {
+      setWho(savedWho);
+      applyWho(savedWho);
+    }
+
+    const savedLink = localStorage.getItem(GITHUB_STORAGE_KEY);
+    if (savedLink) setGithubLink(savedLink);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("gitfut_tasks", JSON.stringify(tasks));
+  }, [tasks]);
+
+  function applyWho(w: Who) {
+    const role: UserRole = w === "me" ? "coach" : "player";
+    setUserRole(role);
+    setActiveTab(w === "me" ? "coach" : "profile");
+    localStorage.setItem(USER_ROLE_STORAGE_KEY, role);
+  }
+
+  const handleOnboardingDone = (w: Who, link?: string) => {
+    localStorage.setItem(WHO_STORAGE_KEY, w);
+    if (link) {
+      localStorage.setItem(GITHUB_STORAGE_KEY, link);
+      setGithubLink(link);
+    }
+    setWho(w);
+    applyWho(w);
+  };
+
+  const stats = useMemo(() => {
+    const baseStats = { LOG: 50, PYT: 50, HTM: 50, CSS: 50, JS: 50, GIT: 50 };
+    let approvedCount = 0;
+    tasks.forEach(task => {
+      if (task.status === "Goal Scored!") {
+        approvedCount++;
+        baseStats[task.category] += 15;
+      }
+    });
+    const ovr = Math.min(99, 60 + Math.floor((approvedCount / tasks.length) * 39));
+    (Object.keys(baseStats) as Category[]).forEach(k => { if (baseStats[k] > 99) baseStats[k] = 99; });
+    return { ...baseStats, ovr, approvedCount, total: tasks.length };
+  }, [tasks]);
+
+  const handleTaskSubmit = () => {
+    if (!selectedTask) return;
+    setTasks(tasks.map(t => t.id === selectedTask.id ? { ...t, status: "VAR Check", demoUrl: demoInput } : t));
+    setSelectedTask(null);
+    setDemoInput("");
+  };
+
+  const handleCoachApprove = (id: string) => {
+    if (coachPin !== "1234") return alert("VAR Overruled: Incorrect Coach PIN");
+    setTasks(tasks.map(t => t.id === id ? { ...t, status: "Goal Scored!" } : t));
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <div className="min-h-screen bg-[#0B132B] text-slate-100 font-sans selection:bg-[#00E676] selection:text-black">
+      {!who && <RoleSelector onDone={handleOnboardingDone} />}
+
+      <Header
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        githubLink={githubLink}
+        onEditGithub={() => {}}
+      />
+
+      <main className="max-w-6xl mx-auto px-6 py-12">
+        {activeTab === "profile" && <ProfileTab stats={stats} />}
+        {activeTab === "roadmap" && <RoadmapTab tasks={tasks} ovr={stats.ovr} onSelectTask={setSelectedTask} />}
+        {activeTab === "coach" && (
+          <CoachTab tasks={tasks} coachPin={coachPin} setCoachPin={setCoachPin} onApprove={handleCoachApprove} />
+        )}
       </main>
+
+      <TaskModal
+        task={selectedTask}
+        demoInput={demoInput}
+        setDemoInput={setDemoInput}
+        onSubmit={handleTaskSubmit}
+        onClose={() => setSelectedTask(null)}
+      />
     </div>
   );
 }
